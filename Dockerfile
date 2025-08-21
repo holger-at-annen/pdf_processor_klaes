@@ -1,56 +1,33 @@
-# Base image with Node.js for building frontend
-FROM node:18 AS builder
+FROM node:18
 
-# Install frontend dependencies
-COPY frontend/package.json /app/frontend/package.json
-RUN cd /app/frontend && npm install
+WORKDIR /app
 
-# Copy frontend source and build
-COPY frontend /app/frontend
-RUN cd /app/frontend && npm run build
+# Install Python and dependencies
+RUN apt-get update && apt-get install -y python3 python3-pip python3-venv && \
+    python3 -m venv /app/venv && \
+    /app/venv/bin/pip install PyPDF2 pandas openpyxl
 
-# Install backend dependencies
-COPY backend/package.json /app/backend/package.json
-RUN cd /app/backend && npm install
+# Copy backend and frontend package files
+COPY backend/package*.json ./backend/
+COPY frontend/package*.json ./frontend/
 
-# Copy backend source
-COPY backend /app/backend
+# Install backend and frontend dependencies
+RUN cd backend && npm install
+RUN cd frontend && npm install
 
-# Production stage
-FROM nginx:alpine
-COPY --from=builder /app/frontend/build /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=builder /app/backend /app/backend
+# Copy application code
+COPY backend ./backend
+COPY frontend ./frontend
 
-# Install Node.js, Python, and pip
-RUN apk add --no-cache nodejs npm python3 py3-pip
+# Copy nginx configuration template
+COPY nginx.conf.template /etc/nginx/conf.d/nginx.conf.template
 
-# Create and set up virtual environment
-RUN python3 -m venv /app/venv
+# Build frontend
+RUN cd frontend && npm run build
 
-# Ensure pip is up-to-date
-RUN /app/venv/bin/pip3 install --no-cache-dir --upgrade pip
+# Expose ports (dynamic via environment variables)
+EXPOSE 80
+EXPOSE 3001
 
-# Debug: Print pip and Python versions
-RUN /app/venv/bin/pip3 --version
-RUN python3 --version
-RUN which /app/venv/bin/pip3
-
-# Install Python dependencies
-RUN /app/venv/bin/pip3 install --no-cache-dir PyPDF2==3.0.1 pandas openpyxl
-RUN /app/venv/bin/pip3 list | grep PyPDF2 || (echo "PyPDF2 installation failed" && exit 1)
-RUN /app/venv/bin/pip3 list | grep pandas || (echo "pandas installation failed" && exit 1)
-RUN /app/venv/bin/pip3 list | grep openpyxl || (echo "openpyxl installation failed" && exit 1)
-RUN /app/venv/bin/pip3 list > /app/pip_list.txt
-
-# Install backend dependencies
-RUN cd /app/backend && npm install
-
-# Create uploads directory
-RUN mkdir -p /app/backend/uploads
-
-# Expose ports
-EXPOSE 80 3001
-
-# Start nginx and backend
-CMD ["sh", "-c", "cd /app/backend && npm start & nginx -g 'daemon off;'"]
+# Start script to substitute environment variables and run services
+CMD ["/bin/sh", "-c", "envsubst '$BACKEND_PORT' < /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;' & cd /app/backend && npm start"]
