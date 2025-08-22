@@ -15,7 +15,7 @@ COPY frontend/package*.json ./frontend/
 RUN cd backend && npm install
 RUN cd frontend && npm install
 
-# Copy application code, including scripts directory
+# Copy application code
 COPY backend ./backend
 COPY frontend ./frontend
 
@@ -28,10 +28,8 @@ RUN cd frontend && npm run build && \
     cp -r build/* /usr/share/nginx/html/ && \
     ls -l /usr/share/nginx/html/  # Debug: list files to verify copy
 
-# Ensure scripts directory is copied and list contents for debugging
-RUN mkdir -p /app/backend/scripts && \
-    cp -r backend/scripts/* /app/backend/scripts/ && \
-    ls -l /app/backend/scripts/  # Debug: verify scripts
+# Debug: list scripts directory to verify contents
+RUN ls -l /app/backend/scripts/ || echo "Scripts directory is empty or missing"
 
 # Remove default Nginx configuration to avoid conflicts
 RUN rm -f /etc/nginx/sites-enabled/default
