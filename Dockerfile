@@ -2,8 +2,8 @@ FROM node:18
 
 WORKDIR /app
 
-# Install Python and dependencies, including gettext-base for envsubst
-RUN apt-get update && apt-get install -y python3 python3-pip python3-venv gettext-base && \
+# Install Python, Nginx, and gettext-base for envsubst
+RUN apt-get update && apt-get install -y python3 python3-pip python3-venv nginx gettext-base && \
     python3 -m venv /app/venv && \
     /app/venv/bin/pip install PyPDF2 pandas openpyxl
 
