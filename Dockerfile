@@ -22,23 +22,25 @@ COPY frontend ./frontend
 # Copy nginx configuration template
 COPY nginx.conf.template /etc/nginx/conf.d/nginx.conf.template
 
-# Explicitly copy holzliste_sort.py if it exists
-RUN mkdir -p /app/backend/scripts && \
-    [ -f backend/scripts/holzliste_sort.py ] && cp backend/scripts/holzliste_sort.py /app/backend/scripts/ || echo "Warning: holzliste_sort.py not found in backend/scripts/" && \
+# Debug: list backend/scripts to verify contents
+RUN echo "Listing backend/scripts:" && \
+    ls -l backend/scripts/ || echo "backend/scripts/ is empty or missing" && \
+    mkdir -p /app/backend/scripts && \
+    [ -f backend/scripts/holzliste_sort.py ] && cp backend/scripts/holzliste_sort.py /app/backend/scripts/ || echo "holzliste_sort.py not found in backend/scripts/" && \
     ls -l /app/backend/scripts/ || echo "Scripts directory is empty"
 
-# Build frontend, clear all default Nginx files, and copy React build files
+# Build frontend, clear default Nginx files, and copy React build files
 RUN cd frontend && npm run build && \
     rm -rf /usr/share/nginx/html/* && \
     cp -r build/* /usr/share/nginx/html/ && \
     ls -l /usr/share/nginx/html/  # Debug: list files to verify copy
 
-# Remove default Nginx configuration to avoid conflicts
+# Remove default Nginx configuration
 RUN rm -f /etc/nginx/sites-enabled/default
 
 # Expose ports (HTTP and backend)
 EXPOSE 80
 EXPOSE 3001
 
-# Start script to substitute environment variables and run services
+# Start services
 CMD ["/bin/sh", "-c", "envsubst '$BACKEND_PORT' < /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;' & cd /app/backend && npm start"]
