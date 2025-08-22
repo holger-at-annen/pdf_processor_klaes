@@ -22,14 +22,16 @@ COPY frontend ./frontend
 # Copy nginx configuration template
 COPY nginx.conf.template /etc/nginx/conf.d/nginx.conf.template
 
+# Explicitly copy holzliste_sort.py if it exists
+RUN mkdir -p /app/backend/scripts && \
+    [ -f backend/scripts/holzliste_sort.py ] && cp backend/scripts/holzliste_sort.py /app/backend/scripts/ || echo "Warning: holzliste_sort.py not found in backend/scripts/" && \
+    ls -l /app/backend/scripts/ || echo "Scripts directory is empty"
+
 # Build frontend, clear all default Nginx files, and copy React build files
 RUN cd frontend && npm run build && \
     rm -rf /usr/share/nginx/html/* && \
     cp -r build/* /usr/share/nginx/html/ && \
     ls -l /usr/share/nginx/html/  # Debug: list files to verify copy
-
-# Debug: list scripts directory to verify contents
-RUN ls -l /app/backend/scripts/ || echo "Scripts directory is empty or missing"
 
 # Remove default Nginx configuration to avoid conflicts
 RUN rm -f /etc/nginx/sites-enabled/default
