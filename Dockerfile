@@ -22,11 +22,13 @@ COPY frontend ./frontend
 # Copy nginx configuration template
 COPY nginx.conf.template /etc/nginx/conf.d/nginx.conf.template
 
-# Build frontend
-RUN cd frontend && npm run build
+# Build frontend and copy to Nginx html directory
+RUN cd frontend && npm run build && \
+    cp -r build/* /usr/share/nginx/html/
 
-# Expose ports (dynamic via environment variables)
+# Expose ports (HTTP and HTTPS)
 EXPOSE 80
+EXPOSE 443
 EXPOSE 3001
 
 # Start script to substitute environment variables and run services
