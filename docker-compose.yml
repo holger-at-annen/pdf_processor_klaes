@@ -9,7 +9,6 @@ services:
       - "${BACKEND_PORT:-3001}:3001"
     volumes:
       - ./backend/uploads:/app/backend/uploads
-      - ./backend/scripts:/app/backend/scripts
     environment:
       - NODE_ENV=production
       - PYTHON=/app/venv/bin/python3
