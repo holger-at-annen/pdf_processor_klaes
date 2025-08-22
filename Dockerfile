@@ -22,10 +22,14 @@ COPY frontend ./frontend
 # Copy nginx configuration template
 COPY nginx.conf.template /etc/nginx/conf.d/nginx.conf.template
 
-# Build frontend and copy to Nginx html directory, remove default Nginx files
+# Build frontend, clear all default Nginx files, and copy React build files
 RUN cd frontend && npm run build && \
-    rm -f /usr/share/nginx/html/* && \
-    cp -r build/* /usr/share/nginx/html/
+    rm -rf /usr/share/nginx/html/* && \
+    cp -r build/* /usr/share/nginx/html/ && \
+    ls -l /usr/share/nginx/html/  # Debug: list files to verify copy
+
+# Remove default Nginx configuration to avoid conflicts
+RUN rm -f /etc/nginx/sites-enabled/default
 
 # Expose ports (HTTP and backend)
 EXPOSE 80
