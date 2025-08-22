@@ -23,11 +23,12 @@ COPY frontend ./frontend
 COPY nginx.conf.template /etc/nginx/conf.d/nginx.conf.template
 
 # Debug: list backend/scripts to verify contents
-RUN echo "Listing backend/scripts:" && \
-    ls -l backend/scripts/ || echo "backend/scripts/ is empty or missing" && \
-    mkdir -p /app/backend/scripts && \
-    [ -f backend/scripts/holzliste_sort.py ] && cp backend/scripts/holzliste_sort.py /app/backend/scripts/ || echo "holzliste_sort.py not found in backend/scripts/" && \
-    ls -l /app/backend/scripts/ || echo "Scripts directory is empty"
+#RUN echo "Listing backend/scripts:" && \
+#    ls -l backend/scripts/ || echo "backend/scripts/ is empty or missing" && \
+#    mkdir -p /app/backend/scripts && \
+#    [ -f backend/scripts/holzliste_sort.py ] && cp backend/scripts/holzliste_sort.py /app/backend/scripts/ || echo "holzliste_sort.py not found in backend/scripts/" && \
+#    ls -l /app/backend/scripts/ || echo "Scripts directory is empty"
+COPY backend/scripts/holzliste_sort.py ./app/backend/scripts/holzliste_sort.py
 
 # Build frontend, clear default Nginx files, and copy React build files
 RUN cd frontend && npm run build && \
